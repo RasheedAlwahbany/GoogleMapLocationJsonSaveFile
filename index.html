@@ -1,0 +1,42 @@
+<div style="justify-content: center;text-align: center;">
+<input type="text" id="countryInput" style="width:100%;padding: 10px;border-radius: 10px;text-align: center;"/><br/>
+<button id="fetchStatesButton" style="min-width: 300px;margin-top: 10px ;padding: 10px;border-radius: 10px;">Save</button>
+</div>
+<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=APIKey;language=en&libraries=places"></script>
+<script>
+    document.getElementById('fetchStatesButton').addEventListener('click', function () {
+    var countryName = document.getElementById('countryInput').value; // Replace with your input element for country name
+
+    // Use Geocoding API to get the country details
+    var geocoder = new google.maps.Geocoder();
+    geocoder.geocode({ 'address': countryName }, function (results, status) {
+        if (status === 'OK') {
+            // Get the country details from the geocoding result
+            var countryDetails = results[0].address_components.find(component => component.types.includes('country'));
+            var countryCode = countryDetails.short_name;
+
+            // Use Places API to fetch all states within the country
+            var placesService = new google.maps.places.PlacesService(document.createElement('div'));
+            placesService.textSearch({ query: 'states in ' + countryName }, function (results, status) {
+                if (status === 'OK') {
+                    // Extract state names from the results
+                    var stateNames = results.map(result => result.formatted_address);
+
+                    // Save the state names to a JSON file
+                    var jsonContent = JSON.stringify(stateNames, null, 2);
+                    var blob = new Blob([jsonContent], { type: 'application/json' });
+                    var a = document.createElement('a');
+                    a.href = window.URL.createObjectURL(blob);
+                    a.download = 'states.json';
+                    a.click();
+                } else {
+                    console.error('Places API request failed: ' + status);
+                }
+            });
+        } else {
+            console.error('Geocoding request failed: ' + status);
+        }
+    });
+});
+
+</script>
